@@ -6,6 +6,7 @@ import TimeTable from "./TimeTable";
 import AttendanceTable from "./AttendanceTable";
 import firebase, {firestore} from "firebase";
 import Passcode from "./Passcode";
+import Login from "./Login";
 
 
 class App extends Component {
@@ -84,12 +85,23 @@ class App extends Component {
     });
   }
 
+  setLogin(user) {
+    this.setState({...this.state, user: user});
+  }
 
   render() {
+    if (!this.state.user) {
+      return (
+        <Login
+          setLogin={this.setLogin.bind(this)}
+
+        />
+      )
+    }
     return (
       <div className="App">
         <center></center>
-        <center>전자 출결</center>
+        <center></center>
         <Grid columns={2} padded>
           <Grid.Row>
             <Grid.Column width={3}>

@@ -1,6 +1,7 @@
 import React, {Component} from 'react'
 import './AttendanceTable.css'
-import {Radio, Form, Table, Button, Loader} from 'semantic-ui-react'
+import {Radio, Form, Table, Button, Loader, Icon} from 'semantic-ui-react'
+import {firestore} from "firebase";
 
 export default class AttendanceTable extends Component {
   state = {currentDay: new Date()};
@@ -25,7 +26,7 @@ export default class AttendanceTable extends Component {
 
     let thisWeek = [];
 
-    for (let i = 1; i < 6; i++) {
+    for (let i = 1; i < 7; i++) {
       let resultDay = new Date(theYear, theMonth, theDate + (i - theDayOfWeek));
       let yyyy = resultDay.getFullYear();
       let mm = Number(resultDay.getMonth()) + 1;
@@ -34,10 +35,54 @@ export default class AttendanceTable extends Component {
       mm = String(mm).length === 1 ? '0' + mm : mm;
       dd = String(dd).length === 1 ? '0' + dd : dd;
 
-      thisWeek[i] = mm + '-' + dd;
+      thisWeek[i - 1] = mm + '-' + dd;
     }
 
-    this.setState({...this.state, weeks: thisWeek});
+    this.getAttendanceInfo(
+      currentDay.getFullYear() + ' ' + thisWeek[0],
+      currentDay.getFullYear() + ' ' + thisWeek[5]);
+    this.setState({...this.state, weeks: thisWeek.splice(0, 5)});
+  }
+
+  getAttendanceInfo(start, end) {
+    if (!this.state.subject) return;
+
+
+    let attendanceTable;
+
+    if (this.state.attendanceTable) {
+      attendanceTable = Object.assign({}, this.state.attendanceTable);
+    } else {
+      attendanceTable = {}
+    }
+
+    this.state.subject.students.forEach((uid) => {
+      firestore().collection("subjects").doc(this.state.subjectId).collection("attendance")
+      // .where("student", "==", uid)
+      // .where("created_at", ">", new Date(start))
+      // .where("created_at", "<", new Date(end))
+        .get().then(function (querySnapshot) {
+        console.log('result:', querySnapshot.size);
+        querySnapshot.forEach(function (doc) {
+          // doc.data() is never undefined for query doc snapshots
+          console.log(doc.id, " => ", doc.data());
+
+          const {student, day, time, created_at} = doc.data();
+          const a_date = new Date(created_at);
+          const att_date = (a_date.getMonth() + 1) + '-' + a_date.getDate();
+          // console.log('A', att_date);
+          attendanceTable[student + '.' + att_date] = true;
+          // console.log(attendanceTable);
+        });
+      })
+        .catch((error) => console.log(error));
+    });
+
+    this.setState({...this.state, attendanceTable: attendanceTable}, () => {
+      // alert(JSON.stringify(this.state.attendanceTable));
+
+    });
+    console.log(attendanceTable);
   }
 
   render() {
@@ -62,11 +107,66 @@ export default class AttendanceTable extends Component {
               <Table.Row>
                 <Table.Cell>학생 ({studentId.slice(0, 4)})</Table.Cell>
 
-                {this.state.weeks.map((day) =>
+                {this.state.weeks.map((day, day_index) =>
                   <Table.Cell>
                     <Form.Field>
-                      <Radio name={studentId + day} value='p'/>
-                      <Radio name={studentId + day} value='a'/>
+                      {/*<Radio name={studentId + day} value='p'/>*/}
+                      {/*<Radio name={studentId + day} value='a'/>*/}
+                      <Button.Group icon>
+                        <Button color={
+                          this.state.attendanceTable &&
+                          this.state.attendanceTable[studentId + '.' + (day)] ?
+                            'blue' : ''
+                        }
+                                onClick={() => {
+                                  // alert(studentId + '.' + (day));
+                                  // alert(JSON.stringify(this.state.attendanceTable));
+                                  // alert(this.state.attendanceTable[studentId + '.' + (day)]);
+
+                                  firestore().collection("subjects").doc(this.state.subjectId).collection("attendance")
+                                    .add({
+                                      created_at: new Date(this.state.currentDay.getFullYear() + ' ' + day),
+                                      day: day,
+                                      time: 0,
+                                      student: studentId,
+                                    }).then(function () {
+                                      this.state.attendanceTable[studentId + '.' + (day)] = true;
+                                      this.setState({...this.state, attendanceTable: this.state.attendanceTable});
+                                    }.bind(this)
+                                  );
+                                }}>
+                          <Icon name='check'/>
+                        </Button>
+                        <Button color={
+                          this.state.attendanceTable &&
+                          this.state.attendanceTable[studentId + '.' + (day)] ?
+                            '' : 'red'
+                        }
+                                onClick={() => {
+                                  // alert(studentId + '.' + (day));
+                                  // alert(JSON.stringify(this.state.attendanceTable));
+                                  // alert(this.state.attendanceTable[studentId + '.' + (day)]);
+
+                                  this.state.attendanceTable[studentId + '.' + (day)] = false;
+                                  this.setState({...this.state, attendanceTable: this.state.attendanceTable});
+
+                                  // firestore().collection("subjects").doc(this.state.subjectId).collection("attendance")
+                                  //   .where()
+                                  //   .add({
+                                  //     created_at: new Date(this.state.currentDay.getFullYear() + ' ' + day),
+                                  //     day: day,
+                                  //     time: 0,
+                                  //     student: studentId,
+                                  //   }).then(function () {
+                                  //     this.state.attendanceTable[studentId + '.' + (day)] = true;
+                                  //     this.setState({...this.state, attendanceTable: this.state.attendanceTable});
+                                  //   }.bind(this)
+                                  // );
+                                }}
+                        >
+                          <Icon name='close'/>
+                        </Button>
+                      </Button.Group>
                     </Form.Field>
                   </Table.Cell>
                 )}
