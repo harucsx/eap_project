@@ -27,9 +27,9 @@ export default class TimeTable extends Component {
       <Table celled className="Table">
         <Table.Header>
           <Table.Row>
-            <Table.HeaderCell>교시</Table.HeaderCell>
+            <Table.HeaderCell textAlign='center' singleLine>교시</Table.HeaderCell>
             {['월', '화', '수', '목', '금'].map((day) =>
-              <Table.HeaderCell>{day}</Table.HeaderCell>)}
+              <Table.HeaderCell textAlign='center'>{day}</Table.HeaderCell>)}
           </Table.Row>
         </Table.Header>
 
@@ -37,10 +37,10 @@ export default class TimeTable extends Component {
           {/*교시*/}
           {[1, 2, 3, 4, 5, 6, 7].map((no) =>
             <Table.Row>
-              <Table.Cell>{no}</Table.Cell>
+              <Table.Cell textAlign='center' collapsing>{no}</Table.Cell>
               {/*요일*/}
               {[1, 2, 3, 4, 5].map((day) =>
-                <Table.Cell
+                <Table.Cell textAlign='center'
                   selectable
                   warning={this.isHighlight(no, day)}
                   onClick={() => {

@@ -39,6 +39,31 @@ export default class Passcode extends Component {
     firestore().collection('subjects').doc(this.props.subjectId).set(subject).then(() => {
       this.props.refresh();
     });
+
+
+    const today = new Date();
+    const docId = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
+
+    let docRef = firestore().collection("subjects").doc(this.state.subjectId)
+      .collection("attendance").doc(docId);
+
+    docRef.get().then((doc) => {
+      let present_count = doc.data().present_count;
+
+      if (!present_count) {
+        present_count = 0;
+      }
+
+      docRef.set({
+        present_count: present_count + 1
+      }, {merge: true}).then();
+
+    }).catch((error) => {
+
+      docRef.set({
+        present_count: 1
+      }, {merge: true}).then();
+    });
   }
 
   render() {
@@ -46,8 +71,17 @@ export default class Passcode extends Component {
 
     if (this.state.subject) {
       if (this.state.subject.passcode.code) {
-        passcode = this.state.subject.passcode.code;
-        this.passcodeValid = true;
+
+        const c_date = new Date(this.state.subject.passcode.created_at);
+        const now = new Date();
+
+        if ((now - c_date) < 3 * 60 * 1000) {
+          passcode = this.state.subject.passcode.code;
+          this.passcodeValid = true;
+        } else {
+          passcode = '만료됨';
+        }
+
       } else {
         passcode = '아직 발행되지 않음';
       }

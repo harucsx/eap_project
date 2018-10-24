@@ -7,6 +7,8 @@ import AttendanceTable from "./AttendanceTable";
 import firebase, {firestore} from "firebase";
 import Passcode from "./Passcode";
 import Login from "./Login";
+import ModifiedTimeTable from "./ModifiedTimeTable";
+import Appeal from "./Appeal";
 
 
 class App extends Component {
@@ -14,9 +16,19 @@ class App extends Component {
 
   panes = [
     {
-      menuItem: '시간표 조회', render: () =>
+      menuItem: '기본 시간표', render: () =>
         <Tab.Pane>
           <TimeTable
+            subjectId={this.state.subjectId}
+            subject={this.state.subject}
+            refresh={this.refresh.bind(this)}
+          />
+        </Tab.Pane>
+    },
+    {
+      menuItem: '시간표 수정', render: () =>
+        <Tab.Pane>
+          <ModifiedTimeTable
             subjectId={this.state.subjectId}
             subject={this.state.subject}
             refresh={this.refresh.bind(this)}
@@ -31,6 +43,22 @@ class App extends Component {
             subject={this.state.subject}
             refresh={this.refresh.bind(this)}
           />
+        </Tab.Pane>
+    },
+    {
+      menuItem: '불출석 인증 처리', render: () =>
+        <Tab.Pane>
+          <Appeal
+            subjectId={this.state.subjectId}
+            subject={this.state.subject}
+            refresh={this.refresh.bind(this)}
+          />
+        </Tab.Pane>
+    },
+    {
+      menuItem: '인증 관리', render: () =>
+        <Tab.Pane>
+          이 영역에는 초기 세팅을 위한 정보가 표시됩니다.
         </Tab.Pane>
     },
   ];
@@ -110,6 +138,7 @@ class App extends Component {
                   {this.state.subjects && this.state.subjects.map((subject) => {
                     return (
                       <List.Item
+                        className='Class-Item'
                         onClick={function () {
                           this.switchSubject(subject.id);
                         }.bind(this)}>

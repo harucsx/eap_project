@@ -42,3 +42,8 @@
     transform: rotate(360deg);
   }
 }
+
+.Class-Item {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
