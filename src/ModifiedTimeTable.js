@@ -175,6 +175,8 @@ export default class ModifiedTimeTable extends Component {
               });
           }}
         />
+        <div> <font color='white'>.</font></div>
+        <div> <font color='white'>.</font></div>
       </div>
     );
   }

@@ -58,7 +58,45 @@ class App extends Component {
     {
       menuItem: '인증 관리', render: () =>
         <Tab.Pane>
-          이 영역에는 초기 세팅을 위한 정보가 표시됩니다.
+          <div>
+            Wifi BSSID : <input value={this.state.subject.bssid} onChange={(event) => {
+            const text = event.target.value;
+            this.state.subject.bssid = text.toLowerCase();
+            this.setState({...this.state});
+          }}
+          />
+            <Button
+              content='저장'
+              onClick={() => {
+                firestore().collection("subjects").doc(this.state.subjectId).update({bssid: this.state.subject.bssid}).then(function () {
+                  alert('저장되었습니다.');
+                });
+              }}
+            />
+
+          </div>
+          <div>
+            GPS 정보 : 위도 <input value={this.state.subject.latitude} onChange={(event) => {
+            const text = event.target.value;
+            this.state.subject.latitude = text;
+            this.setState({...this.state});
+          }}/> 경도 <input value={this.state.subject.longitude} onChange={(event) => {
+            const text = event.target.value;
+            this.state.subject.longitude = text;
+            this.setState({...this.state});
+          }}/>
+            <Button
+              content='저장'
+              onClick={() => {
+                firestore().collection("subjects").doc(this.state.subjectId).update({
+                  latitude: this.state.subject.latitude,
+                  longitude: this.state.subject.longitude
+                }).then(function () {
+                  alert('저장되었습니다.');
+                });
+              }}
+            />
+          </div>
         </Tab.Pane>
     },
   ];
@@ -88,7 +126,6 @@ class App extends Component {
       this.setState({...this.state, subject: doc.data()});
     });
   }
-
 
   componentDidMount() {
     document.title = "전자 출결 시스템";

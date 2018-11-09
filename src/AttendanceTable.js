@@ -94,27 +94,48 @@ export default class AttendanceTable extends Component {
   }
 
   updateAttendance(studentId, day, mode) {
-    if (!this.state.attendanceTable[day] || !this.state.attendanceTable[day].present_count) {
-      alert('해당 날짜에 출석 처리가 이루어지지 않아 변경할 수 없습니다.');
-      return false;
-    }
+    let force_mode = true;
+    // if (!this.state.attendanceTable[day] || !this.state.attendanceTable[day].present_count) {
+      // force_mode = true;
+      // alert('해당 날짜에 출석 처리가 이루어지지 않아 변경할 수 없습니다.');
+      // return false;
+    // }
 
     let update_object = {};
     let new_count = 0;
+    let present_count;
 
-    if (mode == 'present') {
-      new_count = this.state.attendanceTable[day].present_count;
-    } else if (mode == 'late') {
-      new_count = this.state.attendanceTable[day].present_count / 2;
+    if (force_mode)
+      present_count = 0;
+    else
+      present_count = this.state.attendanceTable[day].present_count;
+
+    if (mode === 'present') {
+      new_count = present_count;
+    } else if (mode === 'late') {
+      new_count = present_count / 2;
     } else {
       new_count = 0;
+    }
+
+    if (force_mode) {
+      update_object[studentId + '_force_mode'] = mode;
     }
 
     update_object[studentId] = new_count;
 
     firestore().collection("subjects").doc(this.state.subjectId)
-      .collection("attendance").doc(day).update(update_object).then(function () {
+      .collection("attendance").doc(day).set(update_object, {merge: true}).then(function () {
+        if (force_mode) {
+          if (!this.state.attendanceTable[day]) {
+            this.state.attendanceTable[day] = {};
+            this.state.attendanceTable[day]['present_count'] = 0;
+          }
+          this.state.attendanceTable[day][studentId + '_force_mode'] = mode;
+        }
+
         this.state.attendanceTable[day][studentId] = new_count;
+
 
         this.setState({...this.state, attendanceTable: this.state.attendanceTable});
       }.bind(this)
@@ -159,7 +180,8 @@ export default class AttendanceTable extends Component {
           <Table.Body>
             {this.state.subject.students.map((studentId) =>
               <Table.Row>
-                <Table.Cell textAlign='center' collapsing>학생 ({studentId.slice(0, 4)})</Table.Cell>
+                {/*<Table.Cell textAlign='center' collapsing>학생 ({studentId.slice(0, 4)})</Table.Cell>*/}
+                <Table.Cell textAlign='center' collapsing>{this.state.subject.student_infos[studentId]}</Table.Cell>
 
                 {this.state.weeks.map((day, day_index) => {
 
@@ -183,15 +205,18 @@ export default class AttendanceTable extends Component {
                             let present_count = (this.state.attendanceTable[day].present_count) ? this.state.attendanceTable[day].present_count : 0;
                             let student_count = (this.state.attendanceTable[day][studentId]) ? this.state.attendanceTable[day][studentId] : 0;
 
-                            if (present_count === 0) {
-                              type = 'none';
-                            }
-                            else if (present_count === student_count) {
-                              type = 'present';
-                            } else if (student_count >= present_count / 2) {
-                              type = 'late';
+                            if (this.state.attendanceTable[day][studentId + '_force_mode']) {
+                              type = this.state.attendanceTable[day][studentId + '_force_mode'];
                             } else {
-                              type = 'absent';
+                              if (present_count === 0 && student_count === 0) {
+                                type = 'none';
+                              } else if (present_count === student_count) {
+                                type = 'present';
+                              } else if (student_count >= present_count / 2) {
+                                type = 'late';
+                              } else {
+                                type = 'absent';
+                              }
                             }
                           }
 

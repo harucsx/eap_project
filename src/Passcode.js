@@ -27,11 +27,60 @@ export default class Passcode extends Component {
     });
   }
 
+  pad(n, width) {
+    n = n + '';
+    return n.length >= width ? n : new Array(width - n.length + 1).join('0') + n;
+  }
+
   static getDerivedStateFromProps(nextProps, prevState) {
     return Object.assign(prevState, {subjectId: nextProps.subjectId, subject: nextProps.subject})
   }
 
+  getThisWeek() {
+    let currentDay = new Date();
+    let theYear = currentDay.getFullYear();
+    let theMonth = currentDay.getMonth();
+    let theDate = currentDay.getDate();
+    let theDayOfWeek = currentDay.getDay();
+
+    let thisWeek = [];
+
+    for (let i = 1; i < 7; i++) {
+      let resultDay = new Date(theYear, theMonth, theDate + (i - theDayOfWeek));
+      let yyyy = resultDay.getFullYear();
+      let mm = Number(resultDay.getMonth()) + 1;
+      let dd = resultDay.getDate();
+
+      mm = String(mm).length === 1 ? '0' + mm : mm;
+      dd = String(dd).length === 1 ? '0' + dd : dd;
+
+      thisWeek[i - 1] = yyyy + '-' + mm + '-' + dd;
+    }
+
+    const currentWeekStartDay = thisWeek[0];
+    const currentWeekEndDay = thisWeek[4];
+
+    this.setState({
+      ...this.state,
+      weeks: thisWeek.splice(0, 5),
+      currentWeekStartDay: currentWeekStartDay,
+      currentWeekEndDay: currentWeekEndDay,
+    });
+  }
+
   handleClick() {
+    this.getThisWeek();
+
+    let currentWeekData = this.state.subject.classes;
+    if (this.state.subject.extra_classes && this.state.subject.extra_classes[this.state.currentWeekStartDay]) {
+      currentWeekData = this.state.subject.extra_classes[this.state.currentWeekStartDay];
+    }
+
+    if (!(currentWeekData.find((date) => date.day === new Date().getDay() && date.time === Math.floor(((new Date).getHours() - 7) / 2)))) {
+      alert('출석 번호는 수업 시간에만 발급할 수 있습니다.');
+      return;
+    }
+
     const randomCode = Math.floor(Math.random() * 900000 + 100000);
     const subject = Object.assign(this.state.subject,
       {passcode: {code: randomCode, created_at: new Date()}});
@@ -42,7 +91,7 @@ export default class Passcode extends Component {
 
 
     const today = new Date();
-    const docId = today.getFullYear() + '-' + (today.getMonth() + 1) + '-' + today.getDate();
+    const docId = today.getFullYear() + '-' + this.pad(today.getMonth() + 1, 2) + '-' + this.pad(today.getDate(), 2);
 
     let docRef = firestore().collection("subjects").doc(this.state.subjectId)
       .collection("attendance").doc(docId);

@@ -1,6 +1,7 @@
 import {Button, Header, Icon, Image, Label, Modal, Rating, Segment, Table} from "semantic-ui-react";
 import React, {Component} from "react";
 import {firestore} from "firebase";
+import _ from "lodash";
 
 export default class Appeal extends Component {
   show = () => this.setState({open: true});
@@ -15,6 +16,7 @@ export default class Appeal extends Component {
 
   componentDidMount() {
     this.loadAppeals(this.props.subjectId);
+    this.setState({...this.state, subjectId: this.props.subjectId});
   }
 
   loadAppeals(subjectId) {
@@ -22,7 +24,19 @@ export default class Appeal extends Component {
 
     firestore().collection('subjects').doc(subjectId).collection('appeal').get().then(function (querySnapshot) {
       querySnapshot.forEach(function (doc) {
-        appeals.push(doc.data());
+        appeals.push(Object.assign({id: doc.id,}, doc.data()));
+      });
+
+      appeals = _.sortBy(appeals, (appeal) => {
+        let date = new Date(appeal.time);
+
+        if (appeal.result === true) {
+          date.setFullYear(date.getFullYear() - 10);
+        } else if (appeal.result === false) {
+          date.setFullYear(date.getFullYear() - 10);
+        }
+
+        return -date.getTime();
       });
 
       this.setState({...this.state, appeals});
@@ -43,6 +57,29 @@ export default class Appeal extends Component {
     });
   }
 
+  pad(n, width) {
+    n = n + '';
+    return n.length >= width ? n : new Array(width - n.length + 1).join('0') + n;
+  }
+
+  handleAppeal(appealId, day, studentId, confirm) {
+    let update_object = {};
+
+    if (confirm) {
+      update_object[studentId + '_force_mode'] = 'present';
+
+      firestore().collection("subjects").doc(this.state.subjectId)
+        .collection("attendance").doc(day).set(update_object, {merge: true}).then(function () {
+
+        }.bind(this)
+      );
+    }
+
+    firestore().collection('subjects').doc(this.state.subjectId).collection('appeal').doc(appealId).set({result: confirm}, {merge: true}).then(function () {
+      alert('처리가 완료되었습니다.');
+    });
+  }
+
   render() {
     return (
       <div>
@@ -59,46 +96,33 @@ export default class Appeal extends Component {
           </Table.Header>
 
           <Table.Body>
-            {/*<Table.Row>*/}
-              {/*<Table.Cell>*/}
-                {/*<Header as='h2' textAlign='center'>*/}
-                  {/*승인*/}
-                {/*</Header>*/}
-              {/*</Table.Cell>*/}
-              {/*<Table.Cell singleLine>2012310682</Table.Cell>*/}
-              {/*<Table.Cell>*/}
-                {/*신청합니다.*/}
-              {/*</Table.Cell>*/}
-              {/*<Table.Cell textAlign='center'>*/}
-                {/*2018/10/12*/}
-              {/*</Table.Cell>*/}
-              {/*<Table.Cell>*/}
-                {/*너무 힘이듭니다... 제발 출석 인정 해주세요.*/}
-              {/*</Table.Cell>*/}
-              {/*<Table.Cell textAlign='center'>*/}
-                {/*<Image*/}
-                  {/*src={'https://react.semantic-ui.com/images/wireframe/image.png'}*/}
-                  {/*size='tiny' onClick={this.show}*/}
-                {/*/>*/}
-              {/*</Table.Cell>*/}
-            {/*</Table.Row>*/}
-
             {this.state.appeals && this.state.appeals.map((appeal) => {
               const date = new Date(appeal.time);
+              const day = date.getFullYear() + '-' + this.pad(date.getMonth() + 1, 2) + '-' + this.pad(date.getDate(), 2);
 
               return (
                 <Table.Row>
-                  <Table.Cell>
+                  <Table.Cell textAlign='center'>
+                    {(appeal.result === undefined) &&
+                    <div>
+                      <Icon circular inverted color='teal' name='check'
+                            onClick={() => this.handleAppeal.bind(this)(appeal.id, day, appeal.uid, true)}/>
+                      <Icon circular name='x'
+                            onClick={() => this.handleAppeal.bind(this)(appeal.id, day, appeal.uid, false)}/>
+                    </div>
+                    }
+                    {(appeal.result !== undefined) &&
                     <Header as='h2' textAlign='center'>
-                      <a onClick={() => alert('이 기능은 개발중입니다.')}>미처리</a>
+                      {(appeal.result) ? '승인됨' : '거부됨'}
                     </Header>
+                    }
                   </Table.Cell>
-                  <Table.Cell singleLine>2012310682</Table.Cell>
+                  <Table.Cell singleLine>{this.state.subject.student_infos[appeal.uid]}</Table.Cell>
                   <Table.Cell>
                     {appeal.title}
                   </Table.Cell>
                   <Table.Cell textAlign='center'>
-                    {date.getFullYear()}/{date.getMonth() + 1}/{date.getDate()}
+                    {date.getFullYear()}/{this.pad(date.getMonth() + 1, 2)}/{this.pad(date.getDate(), 2)}
                   </Table.Cell>
                   <Table.Cell>
                     {appeal.content}

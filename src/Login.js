@@ -22,7 +22,7 @@ export default class Login extends Component {
         <Input name='email'
                icon='users'
                iconPosition='left'
-               placeholder='이메일'
+               placeholder='아이디'
                value={this.state.name}
                onChange={this.handleChange}
         />
@@ -44,7 +44,7 @@ export default class Login extends Component {
           icon='arrow circle right'
           labelPosition='right'
           onClick={() => {
-            const email = this.state.email;
+            const email = this.state.email.trim() + "@professor.me";
             const password = this.state.password;
 
             firebase.auth().signInWithEmailAndPassword(email, password)
