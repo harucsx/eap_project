@@ -35,27 +35,27 @@ export default class TimeTable extends Component {
 
         <Table.Body>
           {/*교시*/}
-          {[1, 2, 3, 4, 5, 6, 7].map((no) =>
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((no) =>
             <Table.Row>
               <Table.Cell textAlign='center' collapsing>{no}</Table.Cell>
               {/*요일*/}
               {[1, 2, 3, 4, 5].map((day) =>
                 <Table.Cell textAlign='center'
-                  selectable
-                  warning={this.isHighlight(no, day)}
-                  onClick={() => {
-                    if (this.isHighlight(no, day)) {
-                      this.state.subject.classes = this.removeClass(no, day);
-                    } else {
-                      this.state.subject.classes.push({day: day, time: no});
-                    }
-                    this.setState({...this.state});
+                            selectable
+                            warning={this.isHighlight(no, day)}
+                            onClick={() => {
+                              if (this.isHighlight(no, day)) {
+                                this.state.subject.classes = this.removeClass(no, day);
+                              } else {
+                                this.state.subject.classes.push({day: day, time: no});
+                              }
+                              this.setState({...this.state});
 
-                    firestore().collection('subjects')
-                      .doc(this.props.subjectId)
-                      .set(this.state.subject).then(() => {
-                    });
-                  }}>
+                              firestore().collection('subjects')
+                                .doc(this.props.subjectId)
+                                .set(this.state.subject).then(() => {
+                              });
+                            }}>
                 </Table.Cell>
               )}
             </Table.Row>

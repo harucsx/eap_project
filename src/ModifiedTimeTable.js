@@ -121,7 +121,7 @@ export default class ModifiedTimeTable extends Component {
 
           <Table.Body>
             {/*교시*/}
-            {[1, 2, 3, 4, 5, 6, 7].map((no) =>
+            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((no) =>
               <Table.Row>
                 <Table.Cell textAlign='center' collapsing>{no}</Table.Cell>
                 {/*요일*/}

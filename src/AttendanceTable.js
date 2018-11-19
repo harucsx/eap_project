@@ -220,30 +220,35 @@ export default class AttendanceTable extends Component {
                             }
                           }
 
+                            {/*<Button.Group>*/}
                           return (
-                            <Button.Group icon>
+                              <span>
                               <Button color={(type === 'present') ? 'green' : ''}
+                                      content='출석'
                                       onClick={function () {
                                         this.updateAttendance.bind(this)(studentId, day, 'present');
                                       }.bind(this)}
                               >
-                                <Icon name='check'/>
+                                {/*<Icon name='check'/>*/}
                               </Button>
                               <Button color={(type === 'late') ? 'orange' : ''}
+                                      content='지각'
                                       onClick={function () {
                                         this.updateAttendance.bind(this)(studentId, day, 'late');
                                       }.bind(this)}
                               >
-                                <Icon name='exclamation triangle'/>
+                                {/*<Icon name='exclamation triangle'/>*/}
                               </Button>
                               <Button color={(type === 'absent') ? 'red' : ''}
+                                      content='결석'
                                       onClick={function () {
                                         this.updateAttendance.bind(this)(studentId, day, 'absent');
                                       }.bind(this)}
                               >
-                                <Icon name='close'/>
+                                {/*<Icon name='close'/>*/}
                               </Button>
-                            </Button.Group>
+                              </span>
+                            // </Button.Group>
                           )
                         }.bind(this)()}
 

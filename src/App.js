@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import 'semantic-ui-css/semantic.min.css';
 import './App.css';
-import {Button, Grid, Icon, Image, Label, List, Rating, Segment, Tab} from "semantic-ui-react";
+import {Button, Grid, Header, Icon, Image, Label, List, Rating, Segment, Tab} from "semantic-ui-react";
 import TimeTable from "./TimeTable";
 import AttendanceTable from "./AttendanceTable";
 import firebase, {firestore} from "firebase";
@@ -14,7 +14,7 @@ import Appeal from "./Appeal";
 class App extends Component {
   state = {};
 
-  panes = [
+  setting_panes = [
     {
       menuItem: '기본 시간표', render: () =>
         <Tab.Pane>
@@ -29,26 +29,6 @@ class App extends Component {
       menuItem: '시간표 수정', render: () =>
         <Tab.Pane>
           <ModifiedTimeTable
-            subjectId={this.state.subjectId}
-            subject={this.state.subject}
-            refresh={this.refresh.bind(this)}
-          />
-        </Tab.Pane>
-    },
-    {
-      menuItem: '출석 확인', render: () =>
-        <Tab.Pane>
-          <AttendanceTable
-            subjectId={this.state.subjectId}
-            subject={this.state.subject}
-            refresh={this.refresh.bind(this)}
-          />
-        </Tab.Pane>
-    },
-    {
-      menuItem: '불출석 인증 처리', render: () =>
-        <Tab.Pane>
-          <Appeal
             subjectId={this.state.subjectId}
             subject={this.state.subject}
             refresh={this.refresh.bind(this)}
@@ -101,6 +81,33 @@ class App extends Component {
     },
   ];
 
+  panes = [
+    {
+      menuItem: '출석 확인', render: () =>
+        <Tab.Pane>
+          <AttendanceTable
+            subjectId={this.state.subjectId}
+            subject={this.state.subject}
+            refresh={this.refresh.bind(this)}
+          />
+        </Tab.Pane>
+    },
+    {
+      menuItem: '불출석 인증 처리', render: () =>
+        <Tab.Pane>
+          <Appeal
+            subjectId={this.state.subjectId}
+            subject={this.state.subject}
+            refresh={this.refresh.bind(this)}
+          />
+        </Tab.Pane>
+    },
+    {
+      menuItem: '설정', render: () =>
+        <Tab className="Setting-Tab" panes={this.setting_panes}/>
+    },
+  ];
+
   subjectId = '';
   subject = {};
   subjects = [];
@@ -135,9 +142,9 @@ class App extends Component {
         const data = doc.data();
         this.subjects.push({id: doc.id, name: data.name});
 
-        if (!this.state.subjectId) {
-          this.setState({...this.state, subjectId: doc.id});
-        }
+        // if (!this.state.subjectId) {
+        //   this.setState({...this.state, subjectId: doc.id});
+        // }
       });
 
       this.setState({...this.state, subjects: this.subjects}, this.refresh.bind(this));
@@ -145,9 +152,13 @@ class App extends Component {
   }
 
   switchSubject(subjectId) {
-    this.setState({...this.state, subjectId: subjectId}, () => {
-      this.refresh();
-    });
+    if (subjectId === null) {
+      this.setState({...this.state, subjectId: null, subject: null});
+    } else {
+      this.setState({...this.state, subjectId: subjectId}, () => {
+        this.refresh();
+      });
+    }
   }
 
   setLogin(user) {
@@ -172,6 +183,14 @@ class App extends Component {
             <Grid.Column width={3}>
               <Segment>
                 <List animated verticalAlign='middle'>
+                  <List.Item
+                    className='Class-Item'
+                    onClick={function () {
+                      this.switchSubject(null);
+                    }.bind(this)}>
+                    <Icon name='question circle outline'/>
+                    <List.Content>사용 가이드</List.Content>
+                  </List.Item>
                   {this.state.subjects && this.state.subjects.map((subject) => {
                     return (
                       <List.Item
@@ -188,7 +207,14 @@ class App extends Component {
               </Segment>
             </Grid.Column>
             <Grid.Column width={13}>
+              {this.state.subject &&
               <Segment className="Content">
+
+                <Header as='h2'>
+                  <Icon name='book'/>
+                  <Header.Content>{this.state.subject.name}</Header.Content>
+                </Header>
+
                 <Passcode
                   subjectId={this.state.subjectId}
                   subject={this.state.subject}
@@ -196,6 +222,13 @@ class App extends Component {
                 {/*<b>{JSON.stringify(this.state.subject)}</b>*/}
                 <Tab className="Subject-Tab" panes={this.panes}/>
               </Segment>
+              }
+
+              {!this.state.subject &&
+              <Segment className="Content">
+                <img src={require('./guide.jpg')}/>
+              </Segment>
+              }
             </Grid.Column>
           </Grid.Row>
         </Grid>

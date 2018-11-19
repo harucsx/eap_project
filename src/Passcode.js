@@ -76,7 +76,7 @@ export default class Passcode extends Component {
       currentWeekData = this.state.subject.extra_classes[this.state.currentWeekStartDay];
     }
 
-    if (!(currentWeekData.find((date) => date.day === new Date().getDay() && date.time === Math.floor(((new Date).getHours() - 7) / 2)))) {
+    if (!(currentWeekData.find((date) => date.day === new Date().getDay() && date.time === Math.floor(((new Date).getHours() - 8) / 1)))) {
       alert('출석 번호는 수업 시간에만 발급할 수 있습니다.');
       return;
     }
